@@ -7,13 +7,13 @@ from sklearn.metrics.pairwise import cosine_similarity
 @st.cache_resource
 def load_models():
     try:
-        with open("svd_model.pkl", "rb") as svd_file:
+        with open("models/svd_model.pkl", "rb") as svd_file:
             svd_model = pickle.load(svd_file)
-        with open("tfidf.pkl", "rb") as tfidf_file:
+        with open("models/tfidf_vectorizer.pkl", "rb") as tfidf_file:
             tfidf = pickle.load(tfidf_file)
         return svd_model, tfidf
     except FileNotFoundError:
-        st.error("Model files not found. Please make sure svd_model.pkl and tfidf.pkl are uploaded.")
+        st.error("Model files not found. Please make sure svd_model.pkl and tfidf_vectorizer.pkl are in the models/ directory.")
         return None, None
 
 svd_model, tfidf = load_models()
