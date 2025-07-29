@@ -12,3 +12,5 @@ data/processed/user_item_matrix_5000.pkl
 # Ignore raw data files
 data/raw/Electronics_5.json
 data/raw/meta_Electronics.json
+
+~$*.docx
