@@ -1,0 +1,14 @@
+# Ignore processed data files
+data/processed/cleaned_reviews.csv
+data/processed/cosine_similarity_50k_batched.pkl
+data/processed/item_encoder.pkl
+data/processed/metadata_50k.csv
+data/processed/metadata_clean.csv
+data/processed/metadata_cleaned.csv
+data/processed/user_encoder.pkl
+data/processed/user_item_matrix_5000.csv
+data/processed/user_item_matrix_5000.pkl
+
+# Ignore raw data files
+data/raw/Electronics_5.json
+data/raw/meta_Electronics.json
