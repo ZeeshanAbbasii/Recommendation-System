@@ -3,7 +3,7 @@ import pandas as pd
 import pickle
 from sklearn.metrics.pairwise import cosine_similarity
 
-# Load model files
+# Load SVD model and TF-IDF vectorizer from the models directory
 @st.cache_resource
 def load_models():
     try:
@@ -13,41 +13,50 @@ def load_models():
             tfidf = pickle.load(tfidf_file)
         return svd_model, tfidf
     except FileNotFoundError:
-        st.error("Model files not found. Please make sure svd_model.pkl and tfidf_vectorizer.pkl are in the models/ directory.")
+        st.error("❌ Model files not found. Please ensure svd_model.pkl and tfidf_vectorizer.pkl are present in the 'models/' directory.")
         return None, None
 
+# Load models
 svd_model, tfidf = load_models()
 
-# Streamlit UI
-st.title("🔍 Movie Recommendation System")
+# App UI
+st.title("🎬 Movie Recommendation System")
+st.markdown("Upload a **movie dataset CSV** (must have a `title` column):")
 
-uploaded_file = st.file_uploader("Upload your dataset (CSV format)", type=["csv"])
+uploaded_file = st.file_uploader("Upload CSV", type="csv")
 
 if uploaded_file is not None:
     try:
         data = pd.read_csv(uploaded_file)
-        st.success("✅ Dataset uploaded successfully!")
-        st.write(data.head())
+        st.success("✅ Dataset uploaded successfully.")
+        st.write("Preview of the dataset:", data.head())
 
-        movie_list = data['title'].tolist()
-        selected_movie = st.selectbox("Choose a movie:", movie_list)
+        if 'title' not in data.columns:
+            st.error("❌ The uploaded CSV must have a `title` column.")
+        else:
+            movie_titles = data['title'].dropna().tolist()
+            selected_movie = st.selectbox("🎥 Choose a movie:", movie_titles)
 
-        if st.button("Recommend"):
-            if svd_model is not None and tfidf is not None:
-                try:
-                    movie_idx = data[data['title'] == selected_movie].index[0]
-                    movie_vec = svd_model.transform(tfidf.transform([selected_movie]))
-                    similarities = cosine_similarity(movie_vec, svd_model.transform(tfidf.transform(data['title'])))
-                    top_indices = similarities[0].argsort()[::-1][1:6]
-                    recommendations = data.iloc[top_indices]['title'].tolist()
-                    st.subheader("📽️ Top 5 Recommendations:")
-                    for i, rec in enumerate(recommendations, start=1):
-                        st.write(f"{i}. {rec}")
-                except Exception as e:
-                    st.error(f"Error during recommendation: {e}")
-            else:
-                st.warning("⚠️ Model not loaded.")
+            if st.button("🎯 Recommend Similar Movies"):
+                if svd_model is not None and tfidf is not None:
+                    try:
+                        # Transform selected movie to vector space
+                        movie_vec = svd_model.transform(tfidf.transform([selected_movie]))
+                        # Transform all movie titles
+                        all_vecs = svd_model.transform(tfidf.transform(data['title'].fillna("")))
+                        # Compute cosine similarity
+                        similarities = cosine_similarity(movie_vec, all_vecs)
+                        top_indices = similarities[0].argsort()[::-1][1:6]  # Exclude the selected movie
+                        recommendations = data.iloc[top_indices]['title'].tolist()
+
+                        st.subheader("📽️ Top 5 Recommendations:")
+                        for idx, movie in enumerate(recommendations, 1):
+                            st.write(f"{idx}. {movie}")
+                    except Exception as e:
+                        st.error(f"❌ Recommendation error: {e}")
+                else:
+                    st.warning("⚠️ Model files not loaded.")
     except Exception as e:
-        st.error(f"Could not read file: {e}")
+        st.error(f"❌ Failed to read CSV file: {e}")
 else:
     st.info("📂 Please upload a dataset to begin.")
